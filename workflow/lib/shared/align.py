@@ -107,12 +107,14 @@ def filter_percentiles(data, q1, q2):
     return fill_noise(data, mask, x1, x2)
 
 
-def apply_offsets(data_, offsets):
+def apply_offsets(data_, offsets, fill_value=65535):
     """Apply offsets to image data.
 
     Args:
         data_ (np.ndarray): Image data.
         offsets (np.ndarray): Offset values to be applied.
+        fill_value (int, optional): Value to fill areas outside the original image.
+            Defaults to 65535 (max uint16) for easy filtering.
 
     Returns:
         np.ndarray: Warped image data.
@@ -127,7 +129,7 @@ def apply_offsets(data_, offsets):
         else:
             # Otherwise, apply a similarity transform to warp the frame based on the offset
             st = skimage.transform.SimilarityTransform(translation=offset[::-1])
-            frame_ = skimage.transform.warp(frame, st, preserve_range=True)
+            frame_ = skimage.transform.warp(frame, st, preserve_range=True, cval=fill_value)
             # Add the warped frame to the list
             warped += [frame_.astype(data_.dtype)]
     # Convert the list of warped frames to a numpy array and return
