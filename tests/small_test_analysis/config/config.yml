@@ -11,7 +11,7 @@
 
 # Parameters:
 all:
-  root_fp: brieflow_output/
+  root_fp: /home/nj6532/github/brieflowtest20250711/brieflow/tests/small_test_analysis/brieflow_output/
 preprocess:
   phenotype_channel_order: null
   phenotype_channel_order_flip: true

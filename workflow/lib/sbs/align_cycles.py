@@ -24,7 +24,7 @@ def align_cycles(
     window=2,
     cutoff=1,
     q_norm=70,
-    use_align_within_cycle=True,
+    use_align_within_cycle=False, #NNJP 20250916 - Changed this to False (this is huge!!!!!!)
     skip_cycles=None,
     manual_background_cycle=None,
     manual_channel_mapping=None,

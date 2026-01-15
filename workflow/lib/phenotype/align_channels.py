@@ -14,7 +14,7 @@ def align_phenotype_channels(
     image_data,
     target,
     source,
-    riders=[],
+    riders={},
     upsample_factor=2,
     window=2,
     remove_channel=False,
@@ -25,9 +25,9 @@ def align_phenotype_channels(
         image_data (np.ndarray): The input data containing the channels with dimensions
             (STACK, CHANNEL, I, J) if stacked, or (CHANNEL, I, J) if not.
         target (int): Index of the channel that other channels will be aligned to.
-        source (int): Index of the channel to align with the target.
-        riders (list[int], optional): Additional channel indices that should follow
-            the same alignment as the source channel. Defaults to [].
+        (NNJP changed) source (list): Indices of the channels to align with the target. 
+        (NNJP changed) riders (dictionary, optional): Channel indices that should follow
+            the same alignment each the source channel {source:[listofriders]}. Defaults to {}.
         upsample_factor (int, optional): Subpixel alignment is done if greater than one.
             Defaults to 2.
         window (int, optional): A centered subset of data is used if greater than one.
@@ -45,16 +45,29 @@ def align_phenotype_channels(
     else:
         data_ = image_data.copy()
         stack = False
+    #NNJP hashed out below
+    # # Calculate alignment offsets
+    # windowed = apply_window(data_[[target, source]], window)
+    # offsets = calculate_offsets(windowed, upsample_factor=upsample_factor)
 
-    # Calculate alignment offsets
-    windowed = apply_window(data_[[target, source]], window)
-    offsets = calculate_offsets(windowed, upsample_factor=upsample_factor)
-
-    # Handle riders and create full offsets array
-    if not isinstance(riders, list):
-        riders = [riders]
+    # # Handle riders and create full offsets array
+    # if not isinstance(riders, list):
+    #     riders = [riders]
+    # full_offsets = np.zeros((data_.shape[0], 2))
+    # full_offsets[[source] + riders] = offsets[1]
+    
+    #NNJP added 
     full_offsets = np.zeros((data_.shape[0], 2))
-    full_offsets[[source] + riders] = offsets[1]
+    for src in source:
+        windowed = apply_window(data_[[target, src]], window)
+        offsets = calculate_offsets(windowed, upsample_factor=upsample_factor)
+
+        indices = [src]
+        if riders and src in riders:
+            indices += riders[src]
+
+        full_offsets[indices] = offsets[1]
+    #end of NNJP added
 
     # Apply alignment
     if stack:

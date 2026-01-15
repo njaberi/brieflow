@@ -13,6 +13,7 @@ from skimage import morphology
 import skimage.restoration
 import skimage.transform
 import skimage.filters
+from skimage.filters import gaussian #NNJP added
 from tifffile import imread
 
 from lib.shared.image_utils import applyIJ
@@ -74,14 +75,25 @@ def calculate_ic_field(
     # Calculate default smoothing factor if not provided
     if not smooth:
         smooth = int(np.sqrt((data.shape[-1] * data.shape[-2]) / (np.pi * 20)))
+    
+    #NNJP hash
+    # selem = morphology.disk(smooth)
+    # median_filter = applyIJ(skimage.filters.median)
 
-    selem = morphology.disk(smooth)
-    median_filter = applyIJ(skimage.filters.median)
+    # # Apply median filter with warning suppression
+    # with warnings.catch_warnings():
+    #     warnings.simplefilter("ignore")
+    #     smoothed = median_filter(data, selem, behavior="rank")
+    
+    #NNJP added
+    sigma = smooth / 2
+    gaussian_filter = applyIJ(gaussian)
 
     # Apply median filter with warning suppression
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
-        smoothed = median_filter(data, selem, behavior="rank")
+        smoothed = gaussian_filter(data, sigma=sigma, preserve_range=True)
+    #end of NNJP added
 
     # Rescale channels if requested
     if rescale:

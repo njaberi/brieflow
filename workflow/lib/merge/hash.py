@@ -429,21 +429,32 @@ def multistep_alignment(
         d_1 = dict(list(well_triangles_1.groupby("site")))
         for ix_0, ix_1 in candidates[:batch_size]:
             if ix_0 in d_0 and ix_1 in d_1:  # Only process if both keys exist
-                work.append([d_0[ix_0], d_1[ix_1]])
+                # work.append([d_0[ix_0], d_1[ix_1]])
+                ##NNJP replace line above
+                work.append((ix_0, ix_1, d_0[ix_0], d_1[ix_1]))
             else:
                 print(f"Skipping tile {ix_0}, site {ix_1} - not found in data")
 
         if not work:  # If no valid pairs found, end alignment
             print("No valid pairs to process")
             break
+        #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        # # Perform parallel processing of work
+        # df_align_new = pd.concat(
+        #     Parallel(n_jobs=n_jobs)(delayed(work_on)(*w) for w in work), axis=1
+        # ).T.assign(
+        #     tile=[t for t, _ in candidates[: len(work)]],
+        #     site=[s for _, s in candidates[: len(work)]],
+        # )
 
-        # Perform parallel processing of work
-        df_align_new = pd.concat(
-            Parallel(n_jobs=n_jobs)(delayed(work_on)(*w) for w in work), axis=1
-        ).T.assign(
-            tile=[t for t, _ in candidates[: len(work)]],
-            site=[s for _, s in candidates[: len(work)]],
-        )
+        # #NNJP replace block above
+        for tile_id, site_id, tile_df, site_df in work:
+            result = work_on(tile_df, site_df)
+            result.at["site"] = site_id
+            result.at["tile"] = tile_id
+            arr.append(result)
+        df_align_new = pd.DataFrame(arr)
+        #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
         # Append new alignments to the list
         alignments += [df_align_new]
