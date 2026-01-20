@@ -23,6 +23,10 @@ from lib.external.cp_emulator import (
 from lib.shared.feature_extraction import extract_features, extract_features_bare
 from lib.shared.log_filter import log_ndi
 from lib.phenotype.constants import DEFAULT_METADATA_COLS
+from lib.external.NNJP_partition_features import (
+    partition_features_multichannel,
+    partition_columns_multichannel,
+)
 
 
 def extract_phenotype_cp_multichannel(
@@ -31,6 +35,7 @@ def extract_phenotype_cp_multichannel(
     cells,
     wildcards,
     cytoplasms=None,
+    partition_channels=None, 
     nucleus_channels="all",
     cell_channels="all",
     cytoplasm_channels="all",
@@ -101,10 +106,22 @@ def extract_phenotype_cp_multichannel(
         # Add shape columns
         columns.update(shape_columns)
         return columns
+    
+    def make_partition_column_map(channels):
+        columns = {}
+        for feat, out in partition_columns_multichannel.items():
+            columns.update(
+                {
+                    f"{feat}_{n}": f"{channel_names[ch]}_{renamed}"
+                    for n, (renamed, ch) in enumerate(product(out, channels))
+                }
+            )
+        return columns
 
     # Create column maps for nucleus and cell
     nucleus_columns = make_column_map(nucleus_channels)
     cell_columns = make_column_map(cell_channels)
+    if partition_channels is not None: partition_columns = make_partition_column_map(partition_channels)
 
     # Extract nucleus features
     dfs.append(
@@ -119,6 +136,21 @@ def extract_phenotype_cp_multichannel(
         .set_index("label")
         .add_prefix("nucleus_")
     )
+
+    # Extract partitioning features from nuclei
+    if partition_channels is not None:
+        dfs.append(
+            extract_features(
+                data_phenotype[..., partition_channels, :, :],
+                nuclei,
+                dict(),
+                partition_features_multichannel,
+                multichannel=True,
+            )
+            .rename(columns=partition_columns)
+            .set_index("label")
+            .add_prefix("nucleus_")
+        )
 
     # Extract cell features
     dfs.append(
