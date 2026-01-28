@@ -23,8 +23,9 @@ phenotype_cp.to_parquet(snakemake.output[0])
 bounds_features = [f"cell_bounds_{i}" for i in range(4)]
 
 # Add minimum intensity feature for each channel
+well_params = snakemake.params.well_params
 channel_min_features = [
-    f"cell_{channel}_min" for channel in snakemake.params.channel_names
+    f"cell_{channel}_min" for channel in well_params["channel_names"]
 ]
 # Final features
 phenotype_cp_min_features = [

@@ -1,5 +1,5 @@
 from lib.shared.target_utils import output_to_input
-from lib.shared.rule_utils import get_alignment_params, get_segmentation_params
+from lib.shared.rule_utils import get_alignment_params, get_segmentation_params, get_phenotype_well_params
 
 
 # Apply illumination correction field
@@ -20,7 +20,7 @@ rule align_phenotype:
     output:
         PHENOTYPE_OUTPUTS_MAPPED["align_phenotype"],
     params:
-        config=lambda wildcards: get_alignment_params(wildcards, config),
+        config=lambda wildcards: get_phenotype_well_params(wildcards, config, include_alignment=True),
     script:
         "../scripts/phenotype/align_phenotype.py"
 
@@ -90,7 +90,7 @@ rule extract_phenotype_cp:
         PHENOTYPE_OUTPUTS_MAPPED["extract_phenotype_cp"],
     params:
         foci_channel=config["phenotype"]["foci_channel"],
-        channel_names=config["phenotype"]["channel_names"],
+        well_params=lambda wildcards: get_phenotype_well_params(wildcards, config),
         cp_method=config["phenotype"]["cp_method"],
     script:
         "../scripts/phenotype/extract_phenotype_cp_multichannel.py"
@@ -106,7 +106,7 @@ rule merge_phenotype_cp:
             metadata_combos=phenotype_wildcard_combos,
         ),
     params:
-        channel_names=config["phenotype"]["channel_names"],
+        well_params=lambda wildcards: get_phenotype_well_params(wildcards, config),
     output:
         PHENOTYPE_OUTPUTS_MAPPED["merge_phenotype_cp"],
     script:

@@ -35,6 +35,9 @@ else:
         extract_phenotype_cp_multichannel,
     )
 
+    # Get well-specific parameters
+    well_params = snakemake.params.well_params
+
     # extract phenotype CellProfiler information
     phenotype_cp = extract_phenotype_cp_multichannel(
         data_phenotype=data_phenotype,
@@ -42,7 +45,8 @@ else:
         cells=cells,
         cytoplasms=cytoplasms,
         foci_channel=snakemake.params.foci_channel,
-        channel_names=snakemake.params.channel_names,
+        channel_names=well_params["channel_names"],
+        partition_channels=well_params["partition_channels"],
         wildcards=snakemake.wildcards,
     )
 

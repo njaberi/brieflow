@@ -210,6 +210,37 @@ def get_segmentation_params(module, config):
 
     return params
 
+def get_phenotype_well_params(wildcards, config, include_alignment=False):
+    """Get well-specific phenotype parameters.
+
+    Args:
+        wildcards: Snakemake wildcards with 'plate' and 'well'
+        config: Configuration dictionary
+        include_alignment: If True, include alignment params (target, source, riders, remove_channel)
+
+    Returns:
+        dict with well-specific parameters
+    """
+    phenotype_config = config["phenotype"]
+    well_key = f"{wildcards.plate}_{wildcards.well}"
+
+    params = {
+        "channel_names": phenotype_config["channel_names_by_well"][well_key],
+        "partition_channels": phenotype_config["partition_channels_by_well"][well_key],
+    }
+
+    if include_alignment:
+        params.update({
+            "align": True,
+            "multi_step": False,
+            "target": phenotype_config["target"],
+            "source": phenotype_config["sources_by_well"][well_key],
+            "riders": phenotype_config["riders_by_well"][well_key],
+            "remove_channel": phenotype_config["remove_channel"],
+            "custom_align": False,
+        })
+
+    return params
 
 def get_montage_inputs(
     montage_data_checkpoint,
