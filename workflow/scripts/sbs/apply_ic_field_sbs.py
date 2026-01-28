@@ -19,9 +19,12 @@ else:
     # Same cycle - use one IC field (DAPI cycle IC)
     ic_field = imread(snakemake.input[1])
 
+# Load background image
+background = imread(snakemake.input[3])
+
 # Apply illumination correction field
 corrected_image_data = apply_ic_field(
-    aligned_image_data_segmentation_cycle, correction=ic_field
+    aligned_image_data_segmentation_cycle, correction=ic_field, background=background
 )
 
 # Save corrected image data

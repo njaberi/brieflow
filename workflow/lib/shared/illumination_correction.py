@@ -105,26 +105,23 @@ def calculate_ic_field(
 def apply_ic_field(
     data,
     correction=None,
+    background=None,
     zproject=False,
-    rolling_ball=False,
-    rolling_ball_kwargs={},
     n_jobs=1,
     backend="threading",
 ):
     """Apply illumination correction to the given data.
 
-    Based CellProfiler's CorrectIlluminationApply module
-    https://github.com/CellProfiler/CellProfiler/blob/fa81fb0f2850c7c6d9cefdf4e71806188f1dc546/src/frontend/cellprofiler/modules/correctilluminationapply.py#L62
+        Order of operations:
+        1. Background subtraction (if background provided)
+        2. IC normalization (if correction provided)
 
     Args:
         data (np.ndarray): Input data to be corrected.
         correction (np.ndarray, optional): Correction factor to be applied. Defaults to None.
+        background: Pre-computed background image to subtract. Defaults to None.
         zproject (bool, optional): If True, perform a maximum projection along the first axis.
             Defaults to False.
-        rolling_ball (bool, optional): If True, apply rolling ball background subtraction.
-            Defaults to False.
-        rolling_ball_kwargs (dict, optional): Additional arguments for rolling ball background
-            subtraction. Defaults to an empty dictionary.
         n_jobs (int, optional): Number of parallel jobs to run. Defaults to 1 (no parallelization).
         backend (str, optional): Parallel backend to use ('threading' or 'multiprocessing').
             Defaults to 'threading'.
@@ -138,13 +135,13 @@ def apply_ic_field(
 
     # If n_jobs is 1, process the data without parallelization
     if n_jobs == 1:
+        # 1. Subtract background first (if provided)
+        if background is not None:
+            data = subtract_precomputed_background(data, background).astype(np.uint16)
+
         # Apply the correction factor if provided
         if correction is not None:
             data = (data / correction).astype(np.uint16)
-
-        # Apply rolling ball background subtraction if specified
-        if rolling_ball:
-            data = subtract_background(data, **rolling_ball_kwargs).astype(np.uint16)
 
         return data
 
@@ -325,6 +322,24 @@ def subtract_background(
     # Subtract the background from the image
     return image - background
 
+def subtract_precomputed_background(image, background):
+    """Subtract a pre-computed background from an image.
+
+    Args:
+        image (np.ndarray): Input image from which to subtract the background.
+        background (np.ndarray): Pre-computed background image.
+
+    Returns:
+        np.ndarray: Image with the background subtracted.
+    """
+    # Ensure that the background does not exceed the image values
+    # (prevents negative values after subtraction)
+    mask = background > image
+    background = background.copy()  # avoid modifying original
+    background[mask] = image[mask]
+
+    # Subtract the background from the image
+    return image - background
 
 def combine_ic_images(images, indices):
     """Combine illumination correction images using specified indices.

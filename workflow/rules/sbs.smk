@@ -95,6 +95,7 @@ rule apply_ic_field_sbs:
             },
             ancient_output=True,
         ),
+        config["sbs"]["background_imgs_sbs"] + "/P-{plate}_W-{well}__ic_field.tiff",
     output:
         SBS_OUTPUTS_MAPPED["apply_ic_field_sbs"],
     params:

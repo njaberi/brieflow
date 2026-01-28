@@ -7,6 +7,7 @@ rule apply_ic_field_phenotype:
     input:
         ancient(PREPROCESS_OUTPUTS["convert_phenotype"]),
         ancient(PREPROCESS_OUTPUTS["calculate_ic_phenotype"]),
+        config["phenotype"]["background_imgs_phenotyping"] + "/P-{plate}_W-{well}__ic_field.tiff"
     output:
         PHENOTYPE_OUTPUTS_MAPPED["apply_ic_field_phenotype"],
     script:
